@@ -35,7 +35,7 @@
   morekeywords={SERIAL}
 }
 
-\title{Tietokantojen perusteet 2013, Pershowspaces=false,   iodi III \\ Kirjastotietokanta}
+\title{Tietokantojen perusteet 2013, Periodi III \\ Kirjastotietokanta}
 \author{Mika Viinamäki \\ Paavo Rohamo \\ John Lång \\ Eero Antila \\ Juha Koiranen}
 
 \begin{document}
@@ -105,5 +105,111 @@ INNER JOIN NIMIKETYYPPI
 INNER JOIN SIJAINTI
     ON KOHDE.SijaintiID = SIJAINTI.SijaintiID;
 \end{lstlisting}
+
+\subsection{Nimikkeen kuvailutietojen listaaminen}
+
+Tietyn nimikkeen (tässä tapauksessa ID = 1) kuvailutiedot kuvailutietotyyppien selkokielisten nimien kera:
+
+\begin{lstlisting}
+SELECT KUVAILUTIETOTYYPPI.Nimi,
+    KUVAILUTIETO.Tieto 
+FROM KUVAILUTIETO
+INNER JOIN KUVAILUTIETOTYYPPI
+    ON KUVAILUTIETO.KuvailutietoTyyppiID = KUVAILUTIETOTYYPPI.KuvailutietoTyyppiID
+WHERE
+    KUVAILUTIETO.NimikeID = 1
+ORDER BY Nimi;
+\end{lstlisting}
+
+\subsection{Kohteen lainaaminen}
+
+Lainaustapahtuman yhteydessä tiedämme kohteen \texttt{KohdeID}:n - se saadaan esimerkiksi kohteen takana olevasta viivakoodista. Esimerkeissä \texttt{KohdeID} on 1. Lisäksi asiakkaan \texttt{AsiakasID} on tiedossa - se saadaan vaikkapa asiakkaan kirjastokortista. Esimerkeissä \texttt{AsiakasID} on niin ikään 1.
+
+Ihan ensin tarkistetaan, onko kohde ylipäätään paikalla --- jos ei ole, lainausta ei voida tehdä.
+
+\begin{lstlisting}
+SELECT NOT EXISTS (
+    SELECT 1
+    FROM LAINA
+    WHERE
+        KohdeID = 1
+    AND
+        Palautettu IS NULL
+);
+\end{lstlisting}
+
+Tästä tarkistuksesta selvittyämme selvitämme kohteen \texttt{NimikeID} --- sitä tarvitaan useaan otteeseen:
+
+\begin{lstlisting}
+SELECT NimikeID
+FROM KOHDE
+WHERE KohdeID = 1
+LIMIT 1;
+\end{lstlisting}
+
+Oletetaan, että kohteen \texttt{NimikeID}:ksi saatiin 2.
+
+Nyt tarkistetaan, onko nimikkeestä enemmän kohteita paikalla kuin avoimia tilauksia - jos ei ole, lainausta ei voida tehdä. Tilausten määrä tälle nimikkeelle saadaan seuraavan kyselyn avulla:
+
+\begin{lstlisting}
+SELECT count(*)
+FROM TILAUS
+WHERE TILAUS.NimikeID = 2;
+\end{lstlisting}
+
+Lainattavissa ja paikalla olevien kyseisen nimikkeen kohteiden määrä taas seuraavasti:
+
+\begin{lstlisting}
+SELECT count(*) 
+FROM KOHDE
+WHERE
+    KOHDE.NimikeID = 2
+AND
+    KOHDE.LainaAika > 0
+AND
+    NOT EXISTS (
+        SELECT 1
+        FROM Laina
+        WHERE
+            KohdeID = KOHDE.KohdeID
+        AND
+            Palautettu IS NULL
+    );
+\end{lstlisting}
+
+\begin{samepage}
+Jos tilauksia on enemmän tai yhtä monta kuin saatavilla olevia kohteita, varausta ei voida tehdä - ellei asiakas ole niin monen varauksen joukossa kuin saatavilla olevia kohteita on. Oletetaan, että paikalla olevia kohteita halutulle nimikkeelle on 5:
+
+\begin{lstlisting}
+SELECT EXISTS (
+    SELECT 1
+    FROM TILAUS
+    WHERE
+        NimikeID = 2
+    AND
+        AsiakasID = 1
+    ORDER BY Paivamaara DESC
+    LIMIT 5
+);
+\end{lstlisting}
+\end{samepage}
+
+Jos kysely palauttaa \texttt{TRUE}, voidaan jatkaa vaikka saatavilla olevia kohteita ei olisikaan enempää kuin varauksia kyseiselle nimikkeelle. Nyt kun kaikki on kunnossa, voidaan kirjata uusi lainaus:
+
+\begin{lstlisting}
+INSERT INTO LAINA (AsiakasID, KohdeID, Lainattu, Palautettava) VALUES (
+    1,
+    1,
+    CURRENT_DATE,
+    CURRENT_DATE + (SELECT LainaAika FROM KOHDE WHERE KohdeID = 1)
+);
+\end{lstlisting}
+
+Lopuksi voidaan poistaa kyseisen asiakkaat kyseiselle nimikkeelle tekemät varaukset, koska asiakas on saanut kohteensa:
+
+\begin{lstlisting}
+DELETE FROM TILAUS WHERE AsiakasID = 1 AND NimikeID = 2;
+\end{lstlisting}
+
 
 \end{document}
