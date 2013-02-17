@@ -177,7 +177,6 @@ AND
     );
 \end{lstlisting}
 
-\begin{samepage}
 Jos tilauksia on enemmän tai yhtä monta kuin saatavilla olevia kohteita, varausta ei voida tehdä - ellei asiakas ole niin monen varauksen joukossa kuin saatavilla olevia kohteita on. Oletetaan, että paikalla olevia kohteita halutulle nimikkeelle on 5:
 
 \begin{lstlisting}
@@ -192,7 +191,6 @@ SELECT EXISTS (
     LIMIT 5
 );
 \end{lstlisting}
-\end{samepage}
 
 Jos kysely palauttaa \texttt{TRUE}, voidaan jatkaa vaikka saatavilla olevia kohteita ei olisikaan enempää kuin varauksia kyseiselle nimikkeelle. Nyt kun kaikki on kunnossa, voidaan kirjata uusi lainaus:
 
