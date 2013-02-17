@@ -1,7 +1,12 @@
 \documentclass{article}
 
+\usepackage[defaultmono]{droidmono}
+\usepackage[T1]{fontenc}
+\makeatletter
+\input droid/t1fdm.fd
+\makeatother
+
 \usepackage[utf8]{inputenc}
-\usepackage{amsmath}
 \usepackage[finnish]{babel}
 \usepackage{hyperref}
 \usepackage{graphicx}
@@ -10,6 +15,9 @@
 
 \setlength{\parindent}{0.0in}
 \setlength{\parskip}{0.1in}
+
+\let\stdsection\section
+\renewcommand\section{\newpage\stdsection}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -39,7 +47,14 @@
 \author{Mika Viinamäki \\ Paavo Rohamo \\ John Lång \\ Eero Antila \\ Juha Koiranen}
 
 \begin{document}
-\maketitle 
+
+\pagenumbering{gobble}
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+
+\pagenumbering{arabic}
+\setcounter{page}{2}
 
 \section{Tietosisältökartoitus}
 
