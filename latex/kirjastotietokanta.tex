@@ -123,7 +123,7 @@ INNER JOIN SIJAINTI
 
 \subsection{Nimikkeen kuvailutietojen listaaminen}
 
-Tietyn nimikkeen (tässä tapauksessa ID = 1) kuvailutiedot kuvailutietotyyppien selkokielisten nimien kera:
+Tietyn nimikkeen (tässä tapauksessa NimikeID = 1) kuvailutiedot kuvailutietotyyppien selkokielisten nimien kera:
 
 \begin{lstlisting}
 SELECT KUVAILUTIETOTYYPPI.Nimi,
@@ -136,21 +136,44 @@ WHERE
 ORDER BY Nimi;
 \end{lstlisting}
 
+\subsection{Nimikkeiden hakeminen kuvailutietojen perusteella}
+
+Esimerkkinä kaikki nimikkeet, joiden kustantaja on "Pekka":
+
+\begin{lstlisting}
+SELECT DISTINCT NIMIKE.NimikeID, NIMIKE.Nimi
+FROM NIMIKE
+INNER JOIN KUVAILUTIETO
+    ON NIMIKE.NimikeID = KUVAILUTIETO.NimikeID
+WHERE
+    KUVAILUTIETO.KuvailutietoTyyppiID = 'PUBL'
+AND
+    KUVAILUTIETO.Tieto = 'Pekka'
+\end{lstlisting}
+
 \subsection{Kohteen lainaaminen}
 
 Lainaustapahtuman yhteydessä tiedämme kohteen \texttt{KohdeID}:n - se saadaan esimerkiksi kohteen takana olevasta viivakoodista. Esimerkeissä \texttt{KohdeID} on 1. Lisäksi asiakkaan \texttt{AsiakasID} on tiedossa - se saadaan vaikkapa asiakkaan kirjastokortista. Esimerkeissä \texttt{AsiakasID} on niin ikään 1.
 
-Ihan ensin tarkistetaan, onko kohde ylipäätään paikalla --- jos ei ole, lainausta ei voida tehdä.
+Ihan ensin tarkistetaan, onko kohde ylipäätään paikalla ja onko se lainattavissa --- jos ei ole, lainausta ei voida tehdä.
 
 \begin{lstlisting}
-SELECT NOT EXISTS (
-    SELECT 1
-    FROM LAINA
+SELECT EXISTS (
+    FROM KOHDE
     WHERE
-        KohdeID = 1
+        KOHDE.KohdeID = 1
     AND
-        Palautettu IS NULL
-);
+        KOHDE.LainaAika > 0
+    AND
+        NOT EXISTS (
+            SELECT 1
+            FROM Laina
+            WHERE
+                KohdeID = KOHDE.KohdeID
+            AND
+                Palautettu IS NULL
+        );
+)
 \end{lstlisting}
 
 Tästä tarkistuksesta selvittyämme selvitämme kohteen \texttt{NimikeID} --- sitä tarvitaan useaan otteeseen:
