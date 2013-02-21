@@ -98,6 +98,8 @@ Kaikki tämän dokumentin SQL-lauseet olettavat käytössä olevan PostgreSQL-ti
 
 \section{Esimerkkidata}
 
+Esimerkkidata olettaa, että tietokanta on tyhjä ennen näiden SQL-lauseiden suorittamista --- koska \verb+SERIAL+-tyyppisten attribuuttien arvoja ei \verb+INSERT+-lauseissa ole annettu, relaatiot voivat mennä jotenkin muuten kuin on tarkoitettu mikäli tietokannassa on jo rivejä.
+
 \lstinputlisting{../sql/initial_data.sql}
 
 \section{Käyttötapauksia}
@@ -246,6 +248,13 @@ Lopuksi voidaan poistaa kyseisen asiakkaat kyseiselle nimikkeelle tekemät varau
 \begin{lstlisting}
 DELETE FROM TILAUS WHERE AsiakasID = 1 AND NimikeID = 2;
 \end{lstlisting}
+
+\section{Ratkaisun ongelmat}
+Tietokannassa ei välttämättä ole kaikkia haluttuja ominaisuuksia --- tietokantaan ei esimerkiksi pysty tallentamaan tietoa esimerkiksi asiakkaiden myöhästyneistä palautuksista aiheutuneista veloista tai niiden maksuista.
+
+Lisäksi koska kaikki kuvailutieto tallennetaan \verb+VARCHAR+-tyyppiseen attribuuttiin, voi siitä aiheutua jotain ongelmia --- esimerkiksi hakuihin joissa halutaan nimikkeitä jotka on julkaistu tietyllä vuosivälillä tulee ylimääräinen mutka matkaan.
+
+Toinen ongelma on esimerkiksi tilauksen ajankohdan tallentaminen vain päivän tarkkuudella - sama päivänä tehtyjä tilauksia ei saa oikeaan järjestykseen, ellei sitten luota siihen että \verb+TilausID+ on aina kasvava.
 
 
 \end{document}
