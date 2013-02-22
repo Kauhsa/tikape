@@ -222,13 +222,16 @@ Jos tilauksia on enemmän tai yhtä monta kuin saatavilla olevia kohteita, varau
 \begin{lstlisting}
 SELECT EXISTS (
     SELECT 1
-    FROM TILAUS
+    FROM (
+        SELECT NimikeID, AsiakasID
+        FROM TILAUS
+        ORDER BY Paivamaara DESC
+        LIMIT 5
+    ) AS T
     WHERE
         NimikeID = 2
     AND
         AsiakasID = 1
-    ORDER BY Paivamaara DESC
-    LIMIT 5
 );
 \end{lstlisting}
 
